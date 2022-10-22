@@ -3,6 +3,8 @@
 /node_modules
 /.vscode
 .env
+/postgres
+
 
 # Logs
 logs
