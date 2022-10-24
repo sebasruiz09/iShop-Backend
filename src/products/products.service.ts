@@ -1,5 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ErrorsManagerService } from 'src/common/services/errors-manager/errors-manager.service';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -11,6 +12,7 @@ export class ProductsService {
     //inject-repository
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly errorsManager: ErrorsManagerService,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
@@ -20,11 +22,9 @@ export class ProductsService {
       // create product in new instance of product entity
       const product = this.productRepository.create(createProductDto);
       await this.productRepository.save(product);
-
       return product;
     } catch (error) {
-      console.log(error);
-      throw new InternalServerErrorException();
+      return this.errorsManager.handlingError(error);
     }
   }
 
