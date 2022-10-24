@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorsManagerService } from 'src/common/services/errors-manager/errors-manager.service';
 import { Repository } from 'typeorm';
@@ -8,6 +8,8 @@ import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger('ProductService');
+
   constructor(
     //inject-repository
     @InjectRepository(Product)
@@ -30,8 +32,10 @@ export class ProductsService {
     return products;
   }
 
-  async findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: string) {
+    const product = await this.productRepository.findOneBy({ id });
+    if (!product) throw new NotFoundException();
+    return product;
   }
 
   // eslint-disable-next-line
@@ -39,7 +43,9 @@ export class ProductsService {
     return `This action updates a #${id} product`;
   }
 
-  async remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(id: string) {
+    await this.findOne(id);
+    await this.productRepository.delete({ id });
+    return true;
   }
 }
