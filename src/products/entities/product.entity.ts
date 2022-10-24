@@ -10,4 +10,36 @@ export class Product {
     unique: true,
   })
   title: string;
+
+  @Column('numeric', {
+    default: 0,
+  })
+  price: number;
+
+  @Column({
+    // data type specification
+    type: 'text',
+    // null data allowed
+    nullable: true,
+  })
+  description: string;
+
+  @Column('text', {
+    unique: true,
+  })
+  slug: string;
+
+  @Column('int', {
+    default: 0,
+  })
+  stock: number;
+
+  @Column('text', {
+    //declare array into db
+    array: true,
+  })
+  sizes: string[];
+
+  @Column('text')
+  gender: string;
 }
