@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorsManagerService } from 'src/common/services/errors-manager/errors-manager.service';
 import { Repository } from 'typeorm';
@@ -17,9 +17,6 @@ export class ProductsService {
 
   async create(createProductDto: CreateProductDto) {
     try {
-      //sending data by typeORM method - pattern repository
-
-      // create product in new instance of product entity
       const product = this.productRepository.create(createProductDto);
       await this.productRepository.save(product);
       return product;
@@ -37,6 +34,7 @@ export class ProductsService {
     return `This action returns a #${id} product`;
   }
 
+  // eslint-disable-next-line
   async update(id: number, updateProductDto: UpdateProductDto) {
     return `This action updates a #${id} product`;
   }
