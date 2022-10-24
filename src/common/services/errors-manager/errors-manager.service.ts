@@ -5,6 +5,7 @@ import { IError } from 'src/common/interfaces/error.interface';
 export class ErrorsManagerService {
   async handlingError(error: IError) {
     const { code } = error;
+    console.log(code);
     if (code === '23505') this.duplicateKey(error);
     if (code === '22P02') this.invalidUUID();
   }

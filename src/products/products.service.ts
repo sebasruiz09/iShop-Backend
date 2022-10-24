@@ -7,7 +7,6 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { validate as isUUID } from 'uuid';
-import { of } from 'rxjs';
 
 @Injectable()
 export class ProductsService {
@@ -61,8 +60,21 @@ export class ProductsService {
   }
 
   // eslint-disable-next-line
-  async update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    // preload : loads the element based on the id and all its props
+    const product = await this.productRepository.preload({
+      id: id,
+      ...updateProductDto,
+    });
+
+    if (!product) throw new NotFoundException('product not found');
+
+    try {
+      await this.productRepository.save(product);
+      return product;
+    } catch (error) {
+      await this.errorsManager.handlingError(error);
+    }
   }
 
   async remove(id: string) {
