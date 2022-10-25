@@ -7,6 +7,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { validate as isUUID } from 'uuid';
+import { ProductImage } from './entities/product-images.entity';
 
 @Injectable()
 export class ProductsService {
@@ -17,13 +18,22 @@ export class ProductsService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly errorsManager: ErrorsManagerService,
+
+    //inject images repository
+    @InjectRepository(ProductImage)
+    private readonly productImage: Repository<ProductImage>,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
     try {
-      const product = this.productRepository.create(createProductDto);
+      const { images = [], ...productDetails } = createProductDto;
+
+      const product = this.productRepository.create({
+        ...productDetails,
+        images: images.map((image) => this.productImage.create({ url: image })),
+      });
       await this.productRepository.save(product);
-      return product;
+      return { ...product, images: images };
     } catch (error) {
       return this.errorsManager.handlingError(error);
     }
@@ -65,6 +75,7 @@ export class ProductsService {
     const product = await this.productRepository.preload({
       id: id,
       ...updateProductDto,
+      images: [],
     });
 
     if (!product) throw new NotFoundException('product not found');

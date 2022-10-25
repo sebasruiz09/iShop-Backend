@@ -1,8 +1,10 @@
+import { ProductImage } from './product-images.entity';
 import {
   BeforeInsert,
   BeforeUpdate,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 //entity decorator
@@ -54,6 +56,19 @@ export class Product {
     array: true,
   })
   tags: string[];
+
+  //relation with other table one to many
+  @OneToMany(
+    () => ProductImage,
+    (ProductImage) =>
+      //set table.atributte
+      ProductImage.Product,
+    {
+      //  config to uplaod on delete in cascade
+      cascade: true,
+    },
+  )
+  images?: ProductImage[];
 
   // create procedure before insert
   @BeforeInsert()
