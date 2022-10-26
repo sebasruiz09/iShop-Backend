@@ -41,32 +41,52 @@ export class ProductsService {
 
   async findAll(paginationDto: PaginationDto) {
     const { limit = 10, offset = 0 } = paginationDto;
-    const products = this.productRepository.find({
+    const product = await this.productRepository.find({
       take: limit,
       skip: offset,
+      // display the relationship data in the request
+      relations: {
+        images: true,
+      },
     });
-    return products;
+
+    // flatten response
+    return product.map(({ images, ...product }) => ({
+      ...product,
+      images: images.map((image) => image.url),
+    }));
   }
 
   async findOne(term: string) {
     let product: Product;
-
     if (isUUID(term)) {
       product = await this.productRepository.findOneBy({ id: term });
     } else {
-      const queyBuilder = this.productRepository.createQueryBuilder();
+      const queyBuilder = this.productRepository
+        // alias to table first table to query
+        .createQueryBuilder('prod');
       product = await queyBuilder
         .where(`UPPER(title) =:title or slug =:slug`, {
           title: term.toUpperCase(),
           slug: term.toLowerCase(),
         })
+        // left join to other table
+        // alias is required in case another join is needed
+        .leftJoinAndSelect('prod.images', 'prodImages')
         .getOne();
+
+      // product.images = product.images.map((image) => image.url);
     }
     //query builder concept
 
     // const product = await this.productRepository.findOneBy({ id: term});
     if (!product) throw new NotFoundException();
-    return product;
+    const images = await this.structureImages(product.images);
+    return { ...product, images: images };
+  }
+
+  async structureImages(images: ProductImage[]) {
+    return images.map((image) => image.url);
   }
 
   // eslint-disable-next-line

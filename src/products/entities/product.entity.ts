@@ -66,6 +66,7 @@ export class Product {
     {
       //  config to uplaod on delete in cascade
       cascade: true,
+      eager: true,
     },
   )
   images?: ProductImage[];
