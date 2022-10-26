@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorsManagerService } from 'src/common/services/errors-manager/errors-manager.service';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
@@ -22,6 +22,9 @@ export class ProductsService {
     //inject images repository
     @InjectRepository(ProductImage)
     private readonly productImage: Repository<ProductImage>,
+
+    //inject dataSource
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
@@ -91,14 +94,19 @@ export class ProductsService {
 
   // eslint-disable-next-line
   async update(id: string, updateProductDto: UpdateProductDto) {
+    // line to fix error
+    // const { images, ...toUpdate } = UpdateProductDto;
     // preload : loads the element based on the id and all its props
     const product = await this.productRepository.preload({
-      id: id,
-      ...updateProductDto,
-      images: [],
+      id,
+      // ...toUpdate,
     });
 
+    console.log;
+
     if (!product) throw new NotFoundException('product not found');
+    // create Query runner
+    // const queryRunner = this.dataSource.createQueryRunner();
 
     try {
       await this.productRepository.save(product);
