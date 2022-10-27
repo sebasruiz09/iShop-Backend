@@ -1,14 +1,12 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Product } from './product.entity';
 
-@Entity()
+@Entity({ name: 'product_image' })
 export class ProductImage {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text', {
-    nullable: false,
-  })
+  @Column('text')
   url: string;
 
   //relation with other table
@@ -17,5 +15,5 @@ export class ProductImage {
     () => Product,
     (Product) => Product.images,
   )
-  Product: Product;
+  product: Product;
 }

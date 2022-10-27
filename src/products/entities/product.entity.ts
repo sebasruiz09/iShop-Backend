@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 //entity decorator
 
-@Entity()
+@Entity({ name: 'product' })
 export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -52,8 +52,8 @@ export class Product {
   gender: string;
 
   @Column('text', {
-    default: [],
     array: true,
+    default: [],
   })
   tags: string[];
 
@@ -62,7 +62,7 @@ export class Product {
     () => ProductImage,
     (ProductImage) =>
       //set table.atributte
-      ProductImage.Product,
+      ProductImage.product,
     {
       //  config to uplaod on delete in cascade
       cascade: true,
@@ -74,7 +74,9 @@ export class Product {
   // create procedure before insert
   @BeforeInsert()
   checkSlugInsert() {
-    if (!this.slug) this.slug = this.title;
+    if (!this.slug) {
+      this.slug = this.title;
+    }
 
     this.slug = this.slug
       .toLowerCase()

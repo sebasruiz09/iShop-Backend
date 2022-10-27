@@ -1,13 +1,16 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ErrorsManagerService } from 'src/common/services/errors-manager/errors-manager.service';
 import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import { ErrorsManagerService } from 'src/common/services/errors-manager/errors-manager.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Product } from './entities/product.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { validate as isUUID } from 'uuid';
+
+import { Product } from './entities/product.entity';
 import { ProductImage } from './entities/product-images.entity';
+
+import { validate as isUUID } from 'uuid';
 
 @Injectable()
 export class ProductsService {
@@ -36,6 +39,7 @@ export class ProductsService {
         images: images.map((image) => this.productImage.create({ url: image })),
       });
       await this.productRepository.save(product);
+
       return { ...product, images: images };
     } catch (error) {
       return this.errorsManager.handlingError(error);
@@ -52,7 +56,7 @@ export class ProductsService {
         images: true,
       },
     });
-
+    setTimeout(() => 10000);
     // flatten response
     return product.map(({ images, ...product }) => ({
       ...product,
@@ -84,36 +88,66 @@ export class ProductsService {
 
     // const product = await this.productRepository.findOneBy({ id: term});
     if (!product) throw new NotFoundException();
-    const images = await this.structureImages(product.images);
-    return { ...product, images: images };
-  }
 
-  async structureImages(images: ProductImage[]) {
-    return images.map((image) => image.url);
+    return product;
   }
 
   // eslint-disable-next-line
   async update(id: string, updateProductDto: UpdateProductDto) {
-    // line to fix error
-    // const { images, ...toUpdate } = UpdateProductDto;
-    // preload : loads the element based on the id and all its props
-    const product = await this.productRepository.preload({
-      id,
-      // ...toUpdate,
-    });
+    const { images, ...toUpdate } = updateProductDto;
 
-    console.log;
+    const product = await this.productRepository.preload({ id, ...toUpdate });
 
-    if (!product) throw new NotFoundException('product not found');
-    // create Query runner
-    // const queryRunner = this.dataSource.createQueryRunner();
+    if (!product)
+      throw new NotFoundException(`Product with id: ${id} not found`);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    console.log('Query runner created');
+    await queryRunner.connect();
+    // all steps add to query runner
+    await queryRunner.startTransaction();
 
     try {
-      await this.productRepository.save(product);
-      return product;
+      console.log('entrando al if ');
+      if (images) {
+        //delete is eliminated register
+        //softdelete change estatus in active or inactive
+        //params is very important to cancel delete * from ....
+        await queryRunner.manager.delete(ProductImage, {
+          product: { id },
+        });
+
+        product.images = images.map((image) =>
+          this.productImage.create({ url: image }),
+        );
+        // await this.productRepository.save(product);
+        await queryRunner.manager.save(product);
+
+        //send all process saved in queryRunner
+        await queryRunner.commitTransaction();
+
+        //query runner close clonnection
+        await queryRunner.release();
+
+        console.log('funcionando');
+        return await this.findOnePlain(id);
+      }
     } catch (error) {
-      await this.errorsManager.handlingError(error);
+      console.log(error);
+      //capture some error cancel all query runner procedures
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      this.errorsManager.handlingError(error);
     }
+  }
+
+  async findOnePlain(term: string) {
+    const { images, ...rest } = await this.findOne(term);
+    return {
+      ...rest,
+      images: images.map((image) => image.url),
+    };
   }
 
   async remove(id: string) {
