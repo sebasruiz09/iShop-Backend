@@ -45,4 +45,9 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
+
+  @Delete()
+  deleteAll() {
+    return this.productsService.deleteAllProducts();
+  }
 }

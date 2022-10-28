@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 //entity decorator
 
-@Entity({ name: 'product' })
+@Entity({ name: 'products' })
 export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
