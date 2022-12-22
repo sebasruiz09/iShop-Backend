@@ -108,7 +108,6 @@ export class ProductsService {
     await queryRunner.startTransaction();
 
     try {
-      console.log('entrando al if ');
       if (images) {
         //delete is eliminated register
         //softdelete change estatus in active or inactive
@@ -128,8 +127,6 @@ export class ProductsService {
 
         //query runner close clonnection
         await queryRunner.release();
-
-        console.log('funcionando');
         return await this.findOnePlain(id);
       }
     } catch (error) {
